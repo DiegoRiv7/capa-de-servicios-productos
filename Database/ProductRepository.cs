@@ -4,7 +4,7 @@ using backend_II.Models;
 
 namespace backend_II.Database
 {
-    public class ProductRepository
+    public class ProductRepository : IProductRepository
     {
         private readonly string _connectionString;
 

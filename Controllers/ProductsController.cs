@@ -1,172 +1,40 @@
 using Microsoft.AspNetCore.Mvc;
 using backend_II.Models;
-using backend_II.Database;
+using backend_II.Services;
 
 namespace backend_II.Controllers
 {
+    // El controlador ya no conoce el repositorio ni la base de datos:
+    // recibe la petición HTTP, se la pasa a la capa de servicios y devuelve la respuesta.
     [ApiController]
     [Route("api/[controller]")]
     public class ProductsController : ControllerBase
     {
-        private readonly ProductRepository _repository;
+        private readonly IProductService _productService;
 
-        public ProductsController(ProductRepository repository)
+        public ProductsController(IProductService productService)
         {
-            _repository = repository;
+            _productService = productService;
         }
 
         // GET: api/products
         [HttpGet]
-        public async Task<GeneralResponse<List<Product>>> GetAll()
-        {
-            try
-            {
-                var products = await _repository.GetAllActiveProductsAsync();
-                
-                return new GeneralResponse<List<Product>>
-                {
-                    Success = true,
-                    Message = "Productos obtenidos exitosamente.",
-                    Data = products
-                };
-            }
-            catch (Exception ex)
-            {
-                return new GeneralResponse<List<Product>> 
-                { 
-                    Success = false, 
-                    Message = ex.Message, 
-                    Data = null 
-                };
-            }
-        }
+        public Task<GeneralResponse<List<Product>>> GetAll()
+            => _productService.GetAllActiveAsync();
 
         // GET: api/products/{sku}
         [HttpGet("{sku}")]
-        public async Task<GeneralResponse<Product>> GetByRoute([FromRoute] string sku)
-        {
-            try
-            {
-                var product = await _repository.GetProductBySkuAsync(sku);
-                
-                if (product == null)
-                {
-                    return new GeneralResponse<Product>
-                    {
-                        Success = false,
-                        Message = "Producto no encontrado o inactivo.",
-                        Data = null
-                    };
-                }
-
-                return new GeneralResponse<Product>
-                {
-                    Success = true,
-                    Message = "Producto encontrado.",
-                    Data = product
-                };
-            }
-            catch (Exception ex)
-            {
-                return new GeneralResponse<Product> 
-                { 
-                    Success = false, 
-                    Message = ex.Message, 
-                    Data = null 
-                };
-            }
-        }
+        public Task<GeneralResponse<Product>> GetByRoute([FromRoute] string sku)
+            => _productService.GetBySkuAsync(sku);
 
         // GET: api/products/search?sku=XYZ
         [HttpGet("search")]
-        public async Task<GeneralResponse<Product>> GetByQuery([FromQuery] string sku)
-        {
-            if (string.IsNullOrWhiteSpace(sku))
-            {
-                return new GeneralResponse<Product>
-                {
-                    Success = false,
-                    Message = "El parámetro 'sku' en la URL es obligatorio.",
-                    Data = null
-                };
-            }
+        public Task<GeneralResponse<Product>> GetByQuery([FromQuery] string? sku)
+            => _productService.GetBySkuAsync(sku);
 
-            try
-            {
-                var product = await _repository.GetProductBySkuAsync(sku);
-
-                if (product == null)
-                {
-                    return new GeneralResponse<Product>
-                    {
-                        Success = false,
-                        Message = "Producto no encontrado o inactivo.",
-                        Data = null
-                    };
-                }
-
-                return new GeneralResponse<Product>
-                {
-                    Success = true,
-                    Message = "Producto encontrado.",
-                    Data = product
-                };
-            }
-            catch (Exception ex)
-            {
-                return new GeneralResponse<Product> 
-                { 
-                    Success = false, 
-                    Message = ex.Message, 
-                    Data = null 
-                };
-            }
-        }
-
-        // POST: api/products/search
+        // POST: api/products/search   body: { "sku": "XYZ" }
         [HttpPost("search")]
-        public async Task<GeneralResponse<Product>> GetByBody([FromBody] ProductSearchRequest request)
-        {
-            if (string.IsNullOrWhiteSpace(request.Sku))
-            {
-                return new GeneralResponse<Product>
-                {
-                    Success = false,
-                    Message = "El atributo 'sku' en el cuerpo (Body) de la petición es obligatorio.",
-                    Data = null
-                };
-            }
-
-            try
-            {
-                var product = await _repository.GetProductBySkuAsync(request.Sku);
-
-                if (product == null)
-                {
-                    return new GeneralResponse<Product>
-                    {
-                        Success = false,
-                        Message = "Producto no encontrado o inactivo.",
-                        Data = null
-                    };
-                }
-
-                return new GeneralResponse<Product>
-                {
-                    Success = true,
-                    Message = "Producto encontrado.",
-                    Data = product
-                };
-            }
-            catch (Exception ex)
-            {
-                return new GeneralResponse<Product> 
-                { 
-                    Success = false, 
-                    Message = ex.Message, 
-                    Data = null 
-                };
-            }
-        }
+        public Task<GeneralResponse<Product>> GetByBody([FromBody] ProductSearchRequest request)
+            => _productService.GetBySkuAsync(request?.Sku);
     }
 }

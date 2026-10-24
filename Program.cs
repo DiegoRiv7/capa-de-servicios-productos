@@ -10,8 +10,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 builder.Services.AddControllers();
 
-// Register the repository so we can inject it into the controller
-builder.Services.AddScoped<backend_II.Database.ProductRepository>();
+// Capa de datos y capa de servicios de productos, registradas por interfaz.
+// El controlador recibe IProductService; el servicio recibe IProductRepository.
+builder.Services.AddScoped<backend_II.Database.IProductRepository, backend_II.Database.ProductRepository>();
+builder.Services.AddScoped<backend_II.Services.IProductService, backend_II.Services.ProductService>();
 
 // HttpClient con nombre para PokeAPI, administrado por IHttpClientFactory.
 // La fábrica reutiliza conexiones y evita el agotamiento de sockets de hacer "new HttpClient()".
